@@ -109,4 +109,36 @@ RSpec.describe "Items API", type: :request do
       end
     end
   end
+
+  context "#destroy" do
+    before do
+      @merchant = create(:merchant)
+
+      @item_params = ({ id: 18,
+                       name: "Thing-a-ma-gig",
+                       description: "This is a doo-dad",
+                       unit_price: 99.99,
+                       merchant_id: @merchant.id
+                    })
+      @headers = {"CONTENT_TYPE" => "application/json"}
+
+      post "/api/v1/items", headers: @headers, params: JSON.generate(item: @item_params)
+
+      @created_item = Item.last
+    end
+
+    context "when successful" do
+      it "destroys an item" do
+        expect(Item.count).to eq(4)
+
+        delete "/api/v1/items/#{@created_item.id}"
+
+        expect(response).to be_successful
+        expect(response).to have_http_status(204)
+
+        expect(Item.count).to eq(3)
+        expect{Item.find(@created_item.id)}.to raise_error(ActiveRecord::RecordNotFound)
+      end
+    end
+  end
 end
