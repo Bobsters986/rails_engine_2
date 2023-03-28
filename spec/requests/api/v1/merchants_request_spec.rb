@@ -1,23 +1,39 @@
 require 'rails_helper'
 
-RSpec.describe "Merchants API" do
-  it "sends a list of merchants" do
+RSpec.describe "Merchants API", type: :request do
+  before do
     create_list(:merchant, 3)
+  end
 
-    get '/api/v1/merchants'
+  context "#index" do
+    before do
+      get '/api/v1/merchants'
+    end
 
-    expect(response).to be_successful
+    context "when successful" do
+      it "returns all merchants" do
+        expect(response).to be_successful
 
-    merchants = JSON.parse(response.body, symbolize_names: true)
+        parsed = JSON.parse(response.body, symbolize_names: true)
 
-    expect(merchants.count).to eq(3)
+        expect(parsed[:data].count).to eq(3)
 
-    merchants.each do |merchant|
-      expect(merchant).to have_key(:id)
-      expect(merchant[:id]).to be_an(Integer)
+        expect(parsed[:data][0].keys).to eq([:id, :type, :attributes])
+        expect(parsed[:data][0][:attributes][:name]).to eq(Merchant.first.name)
+      end
+    end
+  end
 
-      expect(merchant).to have_key(:name)
-      expect(merchant[:name]).to be_a(String)
+  context "#show" do
+    before do
+      get '/api/v1/merchants'
+    end
+
+    context "when successful" do
+      it "returns one merchant" do
+        expect(response).to be_successful
+
+      end
     end
   end
 end
