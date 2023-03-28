@@ -26,8 +26,8 @@ RSpec.describe "Merchants API", type: :request do
 
   context "#show" do
     before do
-      first_merchant = Merchant.first
-      get "/api/v1/merchants/#{first_merchant.id}"
+      @first_merchant = Merchant.first
+      get "/api/v1/merchants/#{@first_merchant.id}"
     end
 
     context "when successful" do
@@ -38,9 +38,9 @@ RSpec.describe "Merchants API", type: :request do
 
         expect(parsed[:data].keys).to eq([:id, :type, :attributes])
         expect(parsed[:data][:attributes].size).to eq(1)
-        expect(parsed[:data][:id]).to eq(Merchant.first.id.to_s)
+        expect(parsed[:data][:id]).to eq(@first_merchant.id.to_s)
         expect(parsed[:data][:type]).to eq('merchant')
-        expect(parsed[:data][:attributes][:name]).to eq(Merchant.first.name)
+        expect(parsed[:data][:attributes][:name]).to eq(@first_merchant.name)
       end
     end
 
