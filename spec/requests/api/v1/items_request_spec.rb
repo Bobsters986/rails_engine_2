@@ -72,4 +72,41 @@ RSpec.describe "Items API", type: :request do
       end
     end
   end
+
+  context "#create" do
+    before do
+      @merchant = create(:merchant)
+
+      @item_params = ({ id: 18,
+                       name: "Thing-a-ma-gig",
+                       description: "This is a doo-dad",
+                       unit_price: 99.99,
+                       merchant_id: @merchant.id
+                    })
+      @headers = {"CONTENT_TYPE" => "application/json"}
+
+      post "/api/v1/items", headers: @headers, params: JSON.generate(item: @item_params)
+
+      @created_item = Item.last
+    end
+
+    context "when successful" do
+      it "creates a new item" do
+        expect(response).to be_successful
+        expect(response).to have_http_status(201)
+
+        parsed = JSON.parse(response.body, symbolize_names: true)
+
+        expect(parsed[:data].keys).to eq([:id, :type, :attributes])
+        expect(parsed[:data][:attributes].keys).to eq([:name, :description, :unit_price, :merchant_id])
+        expect(parsed[:data][:id]).to eq(@created_item.id.to_s)
+        expect(parsed[:data][:type]).to eq('item')
+        expect(parsed[:data][:attributes][:name]).to eq(@created_item.name)
+        expect(parsed[:data][:attributes][:description]).to eq(@created_item.description)
+        expect(parsed[:data][:attributes][:unit_price]).to eq(@created_item.unit_price)
+        expect(parsed[:data][:attributes][:unit_price]).to be_a(Float)
+        expect(parsed[:data][:attributes][:merchant_id]).to eq(@created_item.merchant_id)
+      end
+    end
+  end
 end
