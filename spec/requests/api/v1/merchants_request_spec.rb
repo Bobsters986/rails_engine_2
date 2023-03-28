@@ -16,7 +16,7 @@ RSpec.describe "Merchants API", type: :request do
 
         parsed = JSON.parse(response.body, symbolize_names: true)
 
-        expect(parsed[:data].count).to eq(3)
+        expect(parsed[:data].size).to eq(3)
         expect(parsed[:data]).to be_an(Array)
         expect(parsed[:data][0].keys).to eq([:id, :type, :attributes])
         expect(parsed[:data][0][:attributes][:name]).to eq(Merchant.first.name)
@@ -37,7 +37,7 @@ RSpec.describe "Merchants API", type: :request do
         parsed = JSON.parse(response.body, symbolize_names: true)
 
         expect(parsed[:data].keys).to eq([:id, :type, :attributes])
-        expect(parsed[:data][:attributes].length).to eq(1)
+        expect(parsed[:data][:attributes].size).to eq(1)
         expect(parsed[:data][:id]).to eq(Merchant.first.id.to_s)
         expect(parsed[:data][:type]).to eq('merchant')
         expect(parsed[:data][:attributes][:name]).to eq(Merchant.first.name)
