@@ -51,7 +51,7 @@ RSpec.describe "Merchants API", type: :request do
         parsed = JSON.parse(response.body, symbolize_names: true)
 
         expect(response).to have_http_status(404)
-        expect(parsed[:error]).to eq("Couldn't find Merchant with 'id'=986986")
+        expect(parsed[:errors]).to eq("Couldn't find Merchant with 'id'=986986")
       end
     end
   end
@@ -84,7 +84,7 @@ RSpec.describe "Merchants API", type: :request do
         parsed = JSON.parse(response.body, symbolize_names: true)
 
         expect(response).to have_http_status(404)
-        expect(parsed[:error]).to eq("Couldn't find Item with 'id'=986986")
+        expect(parsed[:errors]).to eq("Couldn't find Item with 'id'=986986")
       end
 
       it "returns and error message for passing a string in place of an item ID integer" do
@@ -93,7 +93,7 @@ RSpec.describe "Merchants API", type: :request do
         parsed = JSON.parse(response.body, symbolize_names: true)
 
         expect(response).to have_http_status(404)
-        expect(parsed[:error]).to eq("Couldn't find Item with 'id'=hello")
+        expect(parsed[:errors]).to eq("Couldn't find Item with 'id'=hello")
       end
     end
   end

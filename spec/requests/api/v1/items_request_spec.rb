@@ -59,7 +59,7 @@ RSpec.describe "Items API", type: :request do
         parsed = JSON.parse(response.body, symbolize_names: true)
 
         expect(response).to have_http_status(404)
-        expect(parsed[:error]).to eq("Couldn't find Item with 'id'=986986")
+        expect(parsed[:errors]).to eq("Couldn't find Item with 'id'=986986")
       end
 
       it "returns an error message for string instead of integer" do
@@ -68,7 +68,7 @@ RSpec.describe "Items API", type: :request do
         parsed = JSON.parse(response.body, symbolize_names: true)
 
         expect(response).to have_http_status(404)
-        expect(parsed[:error]).to eq("Couldn't find Item with 'id'=hello")
+        expect(parsed[:errors]).to eq("Couldn't find Item with 'id'=hello")
       end
     end
   end
@@ -86,16 +86,18 @@ RSpec.describe "Items API", type: :request do
                        merchant_id: @merchant.id
                     })
       @headers = {"CONTENT_TYPE" => "application/json"}
-
-      post "/api/v1/items", headers: @headers, params: JSON.generate(item: @item_params)
-
-      @created_item = Item.last
     end
-
+    
     context "when successful" do
       it "creates a new item" do
+        expect(Item.count).to eq(3)
+
+        post "/api/v1/items", headers: @headers, params: @item_params, as: :json
+        @created_item = Item.last
+
         expect(response).to be_successful
         expect(response).to have_http_status(201)
+        expect(Item.count).to eq(4)
 
         parsed = JSON.parse(response.body, symbolize_names: true)
 
@@ -108,6 +110,40 @@ RSpec.describe "Items API", type: :request do
         expect(parsed[:data][:attributes][:unit_price]).to eq(@created_item.unit_price)
         expect(parsed[:data][:attributes][:unit_price]).to be_a(Float)
         expect(parsed[:data][:attributes][:merchant_id]).to eq(@created_item.merchant_id)
+      end
+    end
+
+    context "when UNsuccessful" do
+      it "returns an error message for missing attributes, or if unit price is not a number" do
+        bad_params = ({ name: " ",
+                        description: " ",
+                        unit_price: "hello",
+                        merchant_id: " "
+                      })
+
+        post "/api/v1/items", headers: @headers, params: bad_params, as: :json
+        parsed = JSON.parse(response.body, symbolize_names: true)
+        
+        expect(response).to have_http_status(400)
+        expect(parsed[:message]).to eq("Item was not created. Please enter valid attributes")
+        expect(parsed[:errors]).to eq("Name can't be blank, Description can't be blank, Unit price is not a number, Merchant can't be blank, Merchant must exist")
+      end
+
+      it "should ignore any attributes sent by the user which are not allowed" do
+        extra_params = ({ name: "Thing-a-ma-gig",
+                        description: "This is a doo-dad",
+                        unit_price: 99.99,
+                        merchant_id: @merchant.id,
+                        pizza: "Pepperoni",
+                        nonsense: "Really just preposterous"
+                      })
+
+        post "/api/v1/items", headers: @headers, params: extra_params, as: :json
+        parsed = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(201)
+        expect(parsed[:data][:attributes].keys).to eq([:name, :description, :unit_price, :merchant_id])
+        expect(parsed[:data][:attributes].keys).to_not eq([:name, :description, :unit_price, :merchant_id, :pizza, :nonsense])
       end
     end
   end
@@ -126,7 +162,7 @@ RSpec.describe "Items API", type: :request do
                     })
       @headers = {"CONTENT_TYPE" => "application/json"}
 
-      post "/api/v1/items", headers: @headers, params: JSON.generate(item: @item_params)
+      post "/api/v1/items", headers: @headers, params: @item_params, as: :json
 
       @created_item = Item.last
     end
@@ -150,6 +186,7 @@ RSpec.describe "Items API", type: :request do
     before do
       create_list(:item, 3)
 
+      @merchant = create(:merchant)
       @id = create(:item).id
       @previous_name = Item.last.name
       @previous_description = Item.last.description
@@ -158,14 +195,15 @@ RSpec.describe "Items API", type: :request do
       @item_params = ({ 
                        name: "Thing-a-ma-gig",
                        description: "This is a doo-dad",
-                       unit_price: 99.99
+                       unit_price: 99.99,
+                       merchant_id: @merchant.id
                     })
       @headers = {"CONTENT_TYPE" => "application/json"}
     end
 
     context "when successful" do
       it "updates an item" do
-        patch "/api/v1/items/#{@id}", headers: @headers, params: JSON.generate(item: @item_params)
+        patch "/api/v1/items/#{@id}", headers: @headers, params: @item_params, as: :json
 
         updated_item = Item.find_by(id: @id)
 
@@ -197,7 +235,7 @@ RSpec.describe "Items API", type: :request do
         parsed = JSON.parse(response.body, symbolize_names: true)
 
         expect(response).to have_http_status(404)
-        expect(parsed[:error]).to eq("Couldn't find Item with 'id'=986986")
+        expect(parsed[:errors]).to eq("Couldn't find Item with 'id'=986986")
       end
 
       it "returns an error message for bad merchant_id" do
@@ -208,7 +246,7 @@ RSpec.describe "Items API", type: :request do
           merchant_id: 99999
         })
 
-        patch "/api/v1/items/#{@id}", headers: @headers, params: JSON.generate(item: bad_params)
+        patch "/api/v1/items/#{@id}", headers: @headers, params: bad_params, as: :json
 
         parsed = JSON.parse(response.body, symbolize_names: true)
 
@@ -254,7 +292,7 @@ RSpec.describe "Items API", type: :request do
         parsed = JSON.parse(response.body, symbolize_names: true)
 
         expect(response).to have_http_status(404)
-        expect(parsed[:error]).to eq("Couldn't find Merchant with 'id'=99999")
+        expect(parsed[:errors]).to eq("Couldn't find Merchant with 'id'=99999")
       end
     end
   end
