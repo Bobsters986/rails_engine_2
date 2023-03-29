@@ -45,13 +45,55 @@ RSpec.describe "Merchants API", type: :request do
     end
 
     context "when UNsuccessful" do
-      it "returns and error message" do
+      it "returns an error message for invalid merchant ID" do
         get "/api/v1/merchants/986986"
 
         parsed = JSON.parse(response.body, symbolize_names: true)
 
         expect(response).to have_http_status(404)
         expect(parsed[:error]).to eq("Couldn't find Merchant with 'id'=986986")
+      end
+    end
+  end
+
+  context "An Item's Merchant #show" do
+    before do
+      @first_merchant = Merchant.first
+      @item = create(:item, merchant_id: @first_merchant.id)
+      get "/api/v1/items/#{@item.id}/merchant"
+    end
+
+    context "when successful" do
+      it "returns the merchant for a given item's ID" do
+        expect(response).to be_successful
+
+        parsed = JSON.parse(response.body, symbolize_names: true)
+
+        expect(parsed[:data].keys).to eq([:id, :type, :attributes])
+        expect(parsed[:data][:attributes].keys).to eq([:name])
+        expect(parsed[:data][:id]).to eq(@first_merchant.id.to_s)
+        expect(parsed[:data][:type]).to eq('merchant')
+        expect(parsed[:data][:attributes][:name]).to eq(@first_merchant.name)
+      end
+    end
+
+    context "when UNsuccessful" do
+      it "returns an error message for passing an invalid item ID" do
+        get "/api/v1/items/986986/merchant"
+
+        parsed = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(404)
+        expect(parsed[:error]).to eq("Couldn't find Item with 'id'=986986")
+      end
+
+      it "returns and error message for passing a string in place of an item ID integer" do
+        get "/api/v1/items/hello/merchant"
+
+        parsed = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(404)
+        expect(parsed[:error]).to eq("Couldn't find Item with 'id'=hello")
       end
     end
   end
