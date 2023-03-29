@@ -141,4 +141,58 @@ RSpec.describe "Items API", type: :request do
       end
     end
   end
+
+  context "#update" do
+    before do
+      @id = create(:item).id
+      @previous_name = Item.last.name
+      @previous_description = Item.last.description
+      @previous_price = Item.last.unit_price
+
+      @item_params = ({ 
+                       name: "Thing-a-ma-gig",
+                       description: "This is a doo-dad",
+                       unit_price: 99.99,
+                    })
+      @headers = {"CONTENT_TYPE" => "application/json"}
+    end
+
+    context "when successful" do
+      it "updates an item" do
+        patch "/api/v1/items/#{@id}", headers: @headers, params: JSON.generate(item: @item_params)
+
+        updated_item = Item.find_by(id: @id)
+
+        parsed = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to be_successful
+        expect(response).to have_http_status(201)
+
+        expect(parsed[:data].keys).to eq([:id, :type, :attributes])
+        expect(parsed[:data][:attributes].keys).to eq([:name, :description, :unit_price, :merchant_id])
+        expect(parsed[:data][:id]).to eq(updated_item.id.to_s)
+        expect(parsed[:data][:type]).to eq('item')
+        expect(parsed[:data][:attributes][:name]).to eq(updated_item.name)
+        expect(parsed[:data][:attributes][:description]).to eq(updated_item.description)
+        expect(parsed[:data][:attributes][:unit_price]).to eq(updated_item.unit_price)
+        expect(parsed[:data][:attributes][:unit_price]).to be_a(Float)
+        expect(parsed[:data][:attributes][:merchant_id]).to eq(updated_item.merchant_id)
+
+        expect(parsed[:data][:attributes][:name]).to_not eq(@previous_name)
+        expect(parsed[:data][:attributes][:description]).to_not eq(@previous_description)
+        expect(parsed[:data][:attributes][:unit_price]).to_not eq(@previous_price)
+      end
+    end
+
+    context "when UNsuccessful" do
+      it "returns an error message for invalid id" do
+        patch "/api/v1/items/986986"
+
+        parsed = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(404)
+        expect(parsed[:error]).to eq("Couldn't find Item with 'id'=986986")
+      end
+    end
+  end
 end
