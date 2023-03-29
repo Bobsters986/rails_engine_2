@@ -1,12 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe "Items API", type: :request do
-  before do
-    create_list(:item, 3)
-  end
-
   context "#index" do
     before do
+      create_list(:item, 3)
+
       get '/api/v1/items'
     end
 
@@ -31,6 +29,8 @@ RSpec.describe "Items API", type: :request do
 
   context "#show" do
     before do
+      create_list(:item, 3)
+
       @first_item = Item.first
       get "/api/v1/items/#{@first_item.id}"
     end
@@ -75,6 +75,8 @@ RSpec.describe "Items API", type: :request do
 
   context "#create" do
     before do
+      create_list(:item, 3)
+
       @merchant = create(:merchant)
 
       @item_params = ({ id: 18,
@@ -112,6 +114,8 @@ RSpec.describe "Items API", type: :request do
 
   context "#destroy" do
     before do
+      create_list(:item, 3)
+
       @merchant = create(:merchant)
 
       @item_params = ({ id: 18,
@@ -144,6 +148,8 @@ RSpec.describe "Items API", type: :request do
 
   context "#update" do
     before do
+      create_list(:item, 3)
+
       @id = create(:item).id
       @previous_name = Item.last.name
       @previous_description = Item.last.description
@@ -209,6 +215,46 @@ RSpec.describe "Items API", type: :request do
         expect(response).to have_http_status(404)
         expect(parsed[:message]).to eq("your query could not be completed")
         expect(parsed[:errors]).to eq("Merchant ID doesn't exist")
+      end
+    end
+  end
+
+  context "A Merchant's items #index" do
+    before do
+      @merchant1 = create(:merchant)
+
+      create_list(:item, 5, merchant_id: @merchant1.id)
+
+      get "/api/v1/merchants/#{@merchant1.id}/items"
+    end
+
+    context "when successful" do
+      it "returns all items a merchant" do
+        expect(response).to be_successful
+
+        parsed = JSON.parse(response.body, symbolize_names: true)
+
+        expect(@merchant1.items.size).to eq(5)
+        expect(parsed[:data].size).to eq(5)
+        expect(parsed[:data]).to be_an(Array)
+        expect(parsed[:data][0].keys).to eq([:id, :type, :attributes])
+        expect(parsed[:data][0][:attributes].keys).to eq([:name, :description, :unit_price, :merchant_id])
+        expect(parsed[:data][0][:attributes][:name]).to eq(Item.first.name)
+        expect(parsed[:data][0][:attributes][:description]).to eq(Item.first.description)
+        expect(parsed[:data][0][:attributes][:unit_price]).to eq(Item.first.unit_price)
+        expect(parsed[:data][0][:attributes][:unit_price]).to be_a(Float)
+        expect(parsed[:data][0][:attributes][:merchant_id]).to eq(Item.first.merchant_id)
+      end
+    end
+
+    context "when UNsuccessful" do
+      it "returns an error message for invalid merchant id" do
+        get "/api/v1/merchants/99999/items"
+
+        parsed = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(404)
+        expect(parsed[:error]).to eq("Couldn't find Merchant with 'id'=99999")
       end
     end
   end
