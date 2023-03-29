@@ -152,7 +152,7 @@ RSpec.describe "Items API", type: :request do
       @item_params = ({ 
                        name: "Thing-a-ma-gig",
                        description: "This is a doo-dad",
-                       unit_price: 99.99,
+                       unit_price: 99.99
                     })
       @headers = {"CONTENT_TYPE" => "application/json"}
     end
@@ -192,6 +192,23 @@ RSpec.describe "Items API", type: :request do
 
         expect(response).to have_http_status(404)
         expect(parsed[:error]).to eq("Couldn't find Item with 'id'=986986")
+      end
+
+      it "returns an error message for bad merchant_id" do
+        bad_params = ({ 
+          name: "Thing-a-ma-gig",
+          description: "This is a doo-dad",
+          unit_price: 99.99,
+          merchant_id: 99999
+        })
+
+        patch "/api/v1/items/#{@id}", headers: @headers, params: JSON.generate(item: bad_params)
+
+        parsed = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(404)
+        expect(parsed[:message]).to eq("your query could not be completed")
+        expect(parsed[:errors]).to eq("Merchant ID doesn't exist")
       end
     end
   end
