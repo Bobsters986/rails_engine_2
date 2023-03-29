@@ -11,6 +11,19 @@ class Api::V1::ItemsController < ApplicationController
     render json: ItemSerializer.new(Item.create(item_params)), status: 201
   end
 
+  def update
+    item = Item.find(params[:id])
+
+    if item.update(item_params)
+      render json: ItemSerializer.new(item), status: 201
+    else 
+      render json: {
+        "message": "your query could not be completed",
+        "errors": "Merchant ID doesn't exist"
+      }, status: 404
+    end
+  end
+
   def destroy
     # item = Item.find(params[:id])
     # if item.invoice_items
