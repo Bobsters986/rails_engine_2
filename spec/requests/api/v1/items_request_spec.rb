@@ -118,7 +118,7 @@ RSpec.describe "Items API", type: :request do
         bad_params = ({ name: " ",
                         description: " ",
                         unit_price: "hello",
-                        merchant_id: @merchant.id
+                        merchant_id: " "
                       })
 
         post "/api/v1/items", headers: @headers, params: bad_params, as: :json
@@ -126,7 +126,7 @@ RSpec.describe "Items API", type: :request do
         
         expect(response).to have_http_status(400)
         expect(parsed[:message]).to eq("Item was not created. Please enter valid attributes")
-        expect(parsed[:errors]).to eq("Name can't be blank, Description can't be blank, Unit price is not a number")
+        expect(parsed[:errors]).to eq("Name can't be blank, Description can't be blank, Unit price is not a number, Merchant can't be blank, Merchant must exist")
       end
 
       it "should ignore any attributes sent by the user which are not allowed" do
@@ -186,6 +186,7 @@ RSpec.describe "Items API", type: :request do
     before do
       create_list(:item, 3)
 
+      @merchant = create(:merchant)
       @id = create(:item).id
       @previous_name = Item.last.name
       @previous_description = Item.last.description
@@ -194,7 +195,8 @@ RSpec.describe "Items API", type: :request do
       @item_params = ({ 
                        name: "Thing-a-ma-gig",
                        description: "This is a doo-dad",
-                       unit_price: 99.99
+                       unit_price: 99.99,
+                       merchant_id: @merchant.id
                     })
       @headers = {"CONTENT_TYPE" => "application/json"}
     end
