@@ -9,11 +9,16 @@ class Item < ApplicationRecord
   has_many :invoice_items
   has_many :invoices, through: :invoice_items, dependent: :destroy
 
-   def summon_one_item_invoices
+  def summon_one_item_invoices
     invoices
     .joins(:invoice_items)
     .group(:id)
     .having("COUNT(invoice_items.id) = 1")
+  end
+
+  def self.find_by_name(criteria)
+    where("name ILIKE ?", "%#{criteria}%")
+    .order(:name)
   end
 
   # def merchant_id_exists
