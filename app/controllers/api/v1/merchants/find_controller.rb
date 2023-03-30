@@ -5,7 +5,8 @@ class Api::V1::Merchants::FindController < ApplicationController
     if merchant.nil?
       render json: {
                     message: "your query could not be completed",
-                    data: { errors: "No Merchant names match your search" }
+                    errors: "No Merchant names match your search",
+                    data: {}
                    }
     else
       render json: MerchantSerializer.new(merchant)
