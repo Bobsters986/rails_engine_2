@@ -176,9 +176,9 @@ RSpec.describe "Items API", type: :request do
     context "when successful" do
       context "destroys an item and invoice" do
         it "if that invoice only has the one item" do
-          expect(Item.all.to_a).to eq([item_1, item_2, item_3])
-          expect(Invoice.all.to_a).to eq([inv_1, inv_2, inv_3])
-          expect(Transaction.all.to_a).to eq([trans_1, trans_2])
+          expect(Item.all).to eq([item_1, item_2, item_3])
+          expect(Invoice.all).to eq([inv_1, inv_2, inv_3])
+          expect(Transaction.all).to eq([trans_1, trans_2])
           expect(InvoiceItem.all.size).to eq(6)
 
           delete "/api/v1/items/#{item_1.id}"
@@ -186,10 +186,10 @@ RSpec.describe "Items API", type: :request do
           expect(response).to be_successful
           expect(response).to have_http_status(204)
 
-          expect(Item.all.to_a).to eq([item_2, item_3])
-          expect(Invoice.all.to_a).to eq([inv_2, inv_3])
-          expect(Transaction.all.to_a).to eq([trans_2])
-          expect(InvoiceItem.all.size).to eq(5)
+          expect(Item.all).to eq([item_2, item_3])
+          expect(Invoice.all).to eq([inv_2, inv_3])
+          expect(Transaction.all).to eq([trans_2])
+          expect(InvoiceItem.all.size).to eq(4)
           expect{Item.find(item_1.id)}.to raise_error(ActiveRecord::RecordNotFound)
         end
       end
