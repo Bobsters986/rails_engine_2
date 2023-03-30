@@ -39,11 +39,10 @@ class Api::V1::ItemsController < ApplicationController
   end
 
   def destroy
-    # item = Item.find(params[:id])
-    # if item.invoice_items
-    # end
-      
-    render json: Item.destroy(params[:id]), status: 204
+    item = Item.find(params[:id])
+
+    item.summon_one_item_invoices.first.destroy
+    item.destroy
   end
 
   private

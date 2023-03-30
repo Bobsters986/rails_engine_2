@@ -149,35 +149,49 @@ RSpec.describe "Items API", type: :request do
   end
 
   context "#destroy" do
+    let!(:merchant_1) { create(:merchant) }
+    let!(:item_1) { create(:item, merchant: merchant_1) }
+    let!(:item_2) { create(:item, merchant: merchant_1) }
+    let!(:item_3) { create(:item, merchant: merchant_1) }
+
+    let!(:customer_1) { create(:customer) }
+    let!(:customer_2) { create(:customer) }
+
+    let!(:inv_1) { create(:invoice, merchant: merchant_1, customer: customer_1) }
+    let!(:inv_2) { create(:invoice, merchant: merchant_1, customer: customer_2) }
+    let!(:inv_3) { create(:invoice, merchant: merchant_1, customer: customer_2) }
+
+    let!(:trans_1) { create(:transaction, invoice: inv_1 ) }
+    let!(:trans_2) { create(:transaction, invoice: inv_2 ) }
+
     before do
-      create_list(:item, 3)
-
-      @merchant = create(:merchant)
-
-      @item_params = ({ id: 18,
-                       name: "Thing-a-ma-gig",
-                       description: "This is a doo-dad",
-                       unit_price: 99.99,
-                       merchant_id: @merchant.id
-                    })
-      @headers = {"CONTENT_TYPE" => "application/json"}
-
-      post "/api/v1/items", headers: @headers, params: @item_params, as: :json
-
-      @created_item = Item.last
+      create(:invoice_item, item: item_1, invoice: inv_1)
+      create(:invoice_item, item: item_1, invoice: inv_2)
+      create(:invoice_item, item: item_2, invoice: inv_2)
+      create(:invoice_item, item: item_3, invoice: inv_2)
+      create(:invoice_item, item: item_2, invoice: inv_3)
+      create(:invoice_item, item: item_3, invoice: inv_3)
     end
 
     context "when successful" do
-      it "destroys an item" do
-        expect(Item.count).to eq(4)
+      context "destroys an item and invoice" do
+        it "if that invoice only has the one item" do
+          expect(Item.all).to eq([item_1, item_2, item_3])
+          expect(Invoice.all).to eq([inv_1, inv_2, inv_3])
+          expect(Transaction.all).to eq([trans_1, trans_2])
+          expect(InvoiceItem.all.size).to eq(6)
 
-        delete "/api/v1/items/#{@created_item.id}"
+          delete "/api/v1/items/#{item_1.id}"
 
-        expect(response).to be_successful
-        expect(response).to have_http_status(204)
+          expect(response).to be_successful
+          expect(response).to have_http_status(204)
 
-        expect(Item.count).to eq(3)
-        expect{Item.find(@created_item.id)}.to raise_error(ActiveRecord::RecordNotFound)
+          expect(Item.all).to eq([item_2, item_3])
+          expect(Invoice.all).to eq([inv_2, inv_3])
+          expect(Transaction.all).to eq([trans_2])
+          expect(InvoiceItem.all.size).to eq(4)
+          expect{Item.find(item_1.id)}.to raise_error(ActiveRecord::RecordNotFound)
+        end
       end
     end
   end

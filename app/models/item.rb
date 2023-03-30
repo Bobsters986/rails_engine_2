@@ -7,8 +7,14 @@ class Item < ApplicationRecord
 
   belongs_to :merchant
   has_many :invoice_items
-  has_many :invoices, through: :invoice_items
+  has_many :invoices, through: :invoice_items, dependent: :destroy
 
+   def summon_one_item_invoices
+    invoices
+    .joins(:invoice_items)
+    .group(:id)
+    .having("COUNT(invoice_items.id) = 1")
+  end
 
   # def merchant_id_exists
   #   begin
