@@ -44,12 +44,12 @@ RSpec.describe "Items Search API", type: :request do
           expect(response).to have_http_status(204)
         end
 
-        xit "returns an error message for empty parameter" do
-          get "/api/v1/items/find_all?name="
-          # require 'pry'; binding.pry
+        # xit "returns an error message for empty parameter" do
+        #   get "/api/v1/items/find_all?name="
+        #   # require 'pry'; binding.pry
 
-          expect(response).to have_http_status(204)
-        end
+        #   expect(response).to have_http_status(204)
+        # end
       end
     end
 
