@@ -21,6 +21,21 @@ class Item < ApplicationRecord
     .order(:name)
   end
 
+  def self.price_greater_or_eq(min)
+    where("unit_price >= ?", min)
+    .order(:unit_price)
+  end
+
+  def self.price_less_or_eq(max)
+    where("unit_price <= ?", max)
+    .order(:unit_price)
+  end
+
+  def self.in_between_prices(min, max)
+    where("unit_price >= :min AND unit_price <= :max", {min: min, max: max})
+    .order(:unit_price)
+  end
+
   # def merchant_id_exists
   #   begin
   #     Merchant.find(self.merchant_id)

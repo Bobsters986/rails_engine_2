@@ -15,10 +15,11 @@ RSpec.describe Item, type: :model do
   end
 
   let!(:merchant_1) { create(:merchant) }
-  let!(:item_1) { create(:item, name: "The One Ring", merchant: merchant_1) }
-  let!(:item_2) { create(:item, name: "Ring Pop", merchant: merchant_1) }
-  let!(:item_3) { create(:item, name: "The Ringer", merchant: merchant_1) }
-  let!(:item_4) { create(:item, name: "X Box", merchant: merchant_1) }
+  let!(:item_1) { create(:item, name: "The One Ring", unit_price: 300.00, merchant: merchant_1) }
+  let!(:item_2) { create(:item, name: "Ring Pop", unit_price: 100.00, merchant: merchant_1) }
+  let!(:item_3) { create(:item, name: "The Ringer", unit_price: 150.00, merchant: merchant_1) }
+  let!(:item_4) { create(:item, name: "X Box", unit_price: 400.00, merchant: merchant_1) }
+  let!(:item_5) { create(:item, name: "PS-5", unit_price: 500.00, merchant: merchant_1) }
 
   let!(:customer_1) { create(:customer) }
   let!(:customer_2) { create(:customer) }
@@ -61,5 +62,31 @@ RSpec.describe Item, type: :model do
         expect(searched_item).to eq([])
       end
     end
+
+    describe ".price_greater_or_eq" do
+      it "returns items if they are greater than a certain threshold" do
+        expect(Item.price_greater_or_eq(300.00)).to eq([item_1, item_4, item_5])
+        expect(Item.price_greater_or_eq(300.01)).to eq([item_4, item_5])
+        expect(Item.price_greater_or_eq(300.01)).to_not include(item_1, item_2, item_3)
+      end
+    end
+
+    describe ".price_less_or_eq" do
+      it "returns items if they are less than a certain threshold" do
+        expect(Item.price_less_or_eq(300.00)).to eq([item_2, item_3, item_1])
+        expect(Item.price_less_or_eq(299.99)).to eq([item_2, item_3])
+        expect(Item.price_less_or_eq(299.99)).to_not include(item_1, item_4, item_5)
+      end
+    end
+
+    describe ".in_between_prices" do
+      it "returns items if they are in between two threshold" do
+        expect(Item.in_between_prices(150.00, 400.00)).to eq([item_3, item_1, item_4])
+        expect(Item.in_between_prices(150.00, 400.00)).to_not include(item_2, item_5)
+        expect(Item.in_between_prices(300.00, 499.00)).to eq([item_1, item_4])
+        expect(Item.in_between_prices(300.00, 499.00)).to_not include(item_2, item_3, item_5)
+      end
+    end
+
   end
 end
