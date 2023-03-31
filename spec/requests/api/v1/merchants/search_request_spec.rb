@@ -30,7 +30,7 @@ RSpec.describe "Merchants Search API", type: :request do
 
         expect(response).to have_http_status(200)
         expect(parsed[:message]).to eq("your query could not be completed")
-        expect(parsed[:data][:errors]).to eq("No Merchant names match your search")
+        expect(parsed[:errors]).to eq("No Merchant names match your search")
       end
     end
   end
