@@ -9,11 +9,11 @@ Rails.application.routes.draw do
       get "/items/find_all", to: "items/find#index"
       
       resources :merchants, only: [:index, :show] do
-        resources :items, only: :index
+        resources :items, only: :index, controller: "merchant_items"
       end
 
       resources :items do
-        get "/merchant", to: "merchants#show"
+        get "/merchant", to: "item_merchant#show"
       end
 
       namespace :revenue do
