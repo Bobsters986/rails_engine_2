@@ -36,6 +36,15 @@ class Item < ApplicationRecord
     .order(:unit_price)
   end
 
+  def self.get_top_items_by_revenue(quantity)
+    .joins(invoice_items: [{ invoice: :transactions }])
+    .where(transactions: { result: 'success' }, invoices: { status: 'shipped' })
+    .select("items.*, SUM(invoice_items.quantity * invoice_items.unit_price) AS revenue")
+    .group(:id)
+    .order("revenue DESC")
+    .limit(quantity)
+  end
+
   # def merchant_id_exists
   #   begin
   #     Merchant.find(self.merchant_id)
